@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="arboles">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/dist/arboles.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
