@@ -9,14 +9,13 @@ y escribir el resultado en un nuevo archivo de texto.
 
 */
 
-
 #include <stdio.h>  
 #include <stdlib.h> 
 
-void MatrizTranspuesta (int **matriz, int m, int n, int **resultado){
+void MatrizTranspuesta(int **matriz, int m, int n, int **resultado){
     for (int i = 0; i < m; i++){
         for (int j = 0; j < n; j++){
-            resultado[i][j] = matriz[j][i];
+            resultado[j][i] = matriz[i][j];
         }
     }
 }
@@ -26,77 +25,103 @@ int main(int argc, char *argv[]){
     FILE *file;
     FILE *outfile;
 
-    file = fopen("matriz1.txt","r");
-
-    if(file == NULL){
-        printf("Error al abrir el archivo");
-        return EXIT_SUCCESS;
+    file = fopen("matriz1.txt", "r");
+    if (file == NULL){
+        printf("Error al abrir el archivo de entrada.\n");
+        return EXIT_FAILURE;
     }
 
     int m, n;
-    int **matriz = NULL;
-    int **resultado = NULL;
     fscanf(file, "%d %d", &m, &n);
 
-    //Asigno y leo memoria 
-    matriz = (int **)malloc(m * sizeof(int *));
+    int **matriz = (int **)malloc(m * sizeof(int *));
+    if (matriz == NULL) {
+        printf("Error al asignar memoria para la matriz.\n");
+        fclose(file);
+        return EXIT_FAILURE;
+    }
+
     for(int i = 0; i < m; i++){
         matriz[i] = (int *)malloc(n * sizeof(int));
+        if (matriz[i] == NULL) {
+            printf("Error al asignar memoria para la fila %d.\n", i);
+            for (int j = 0; j < i; j++) {
+                free(matriz[j]);
+            }
+            free(matriz);
+            fclose(file);
+            return EXIT_FAILURE;
+        }
         for(int j = 0; j < n; j++){
             fscanf(file, "%d", &matriz[i][j]);
         }
     }
 
-
-    //Cierro archivo
     fclose(file);
 
-    //Creo y asigno matriz resultado
-    resultado = (int **)malloc(m * sizeof(int *));
-    for(int i = 0; i < m; i++){
-        resultado[i] = (int *)malloc(n * sizeof(int));
-        for(int j = 0; j < n; j++){
-            fscanf(file, "%d", &resultado[i][j]);
+    int **resultado = (int **)malloc(n * sizeof(int *));
+    if (resultado == NULL) {
+        printf("Error al asignar memoria para la matriz resultado.\n");
+        for (int i = 0; i < m; i++) {
+            free(matriz[i]);
+        }
+        free(matriz);
+        return EXIT_FAILURE;
+    }
+
+    for(int i = 0; i < n; i++){
+        resultado[i] = (int *)malloc(m * sizeof(int));
+        if (resultado[i] == NULL) {
+            printf("Error al asignar memoria para la fila %d de resultado.\n", i);
+            for (int j = 0; j < i; j++) {
+                free(resultado[j]);
+            }
+            free(resultado);
+            for (int j = 0; j < m; j++) {
+                free(matriz[j]);
+            }
+            free(matriz);
+            return EXIT_FAILURE;
         }
     }
 
-    //Doy valores a resultado
-    for(int i = 0; i < m; i++){
-        for(int j = 0; j < n; j++){
-            resultado [i][j] == matriz[j][i];
-        }
-    }
+    MatrizTranspuesta(matriz, m, n, resultado);
 
-    MatrizTranspuesta (matriz,  m,  n, resultado);
-
-
-    outfile = fopen("salida.txt", "w");
+    outfile = fopen("matriztras.txt", "w");
     if (outfile == NULL) {
-        printf("Error creando archivo .\n");
-        return EXIT_SUCCESS;;
+        printf("Error creando archivo de salida.\n");
+        for (int i = 0; i < m; i++) {
+            free(matriz[i]);
+        }
+        free(matriz);
+        for (int i = 0; i < n; i++) {
+            free(resultado[i]);
+        }
+        free(resultado);
+        return EXIT_FAILURE;
     }
 
     // Escritura de los resultados
-    for (int i = 0; i < m; i++) {
-        for(int j = 0; j < n ; j++){
-         fprintf(outfile, "%d ", resultado[i][j]);
+    for (int i = 0; i < n; i++) {
+        for(int j = 0; j < m; j++){
+            fprintf(outfile, "%d ", resultado[i][j]);
+        }
+        fprintf(outfile, "\n");
     }
-    fprintf(outfile, "\n");
-}
-
 
     fclose(outfile);
 
     // Liberar memoria
     for (int i = 0; i < m; i++) {
-        free(matriz[i]); //libera memoria de cada fila. puntero de un array de punturos 
+        free(matriz[i]);
     }
     free(matriz);
+    for (int i = 0; i < n; i++) {
+        free(resultado[i]);
+    }
     free(resultado);
 
-    printf("YAAAA SALIOOO HP!! \n");
-
-
+    printf("Proceso completado correctamente.\n");
 
     return EXIT_SUCCESS;
 }
