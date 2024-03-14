@@ -1,7 +1,7 @@
 /* Estudiantes: Juan Pablo Ramirez, Santiago Andrés Candanoza y Carlos Enrique Aroca
 
-Crear un programa en C que lea una matriz de un archivo, calcule su transpuesta y 
-guarde el resultado en otro archivo. 
+Crear un programa en C que lea una matriz de un archivo "matriz1.txt", calcule su transpuesta y 
+guarde el resultado en otro archivo "matriztras.txt". 
 Dada una matriz almacenada en un archivo de texto con dimensiones NxM, 
 el programa debe calcular la matriz transpuesta 
 (donde las filas se convierten en columnas y viceversa) 
