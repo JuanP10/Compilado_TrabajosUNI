@@ -1,170 +1,123 @@
-/*
-Lectura de un archivo de texto que contiene una secuencia de ADN y estimar la secuencia complementaria de ADN. (A)
-El programa debe dividir el archivo en N partes y cada hilo debe estimar la secuencia complementaria de ADN de una parte del archivo.
-El hilo principal debe escribir la secuencia estimada en un archivo de texto llamado SecuenciaEstimada.txt.
-
-*/
-
 #include <stdio.h>
 #include <stdlib.h>
-#include <pthread.h>
 #include <unistd.h>
+#include <pthread.h>
 
-#define N 10 // Número de hilos
-pthread_t hilos[N]; 
+char *helicePrimaria;
+char *heliceComplementaria;
 
-typedef struct {
-    char *secuencia;    // Arreglo de caracteres
-    size_t n;           // Número de elementos en el arreglo
-} DatosArchivo;
-
-typedef struct {              // Estructura para pasar argumentos a los hilos 
-    DatosArchivo *datos;      // Puntero a la estructura de datos
-    int id;                   // Identificador del hilo
-} HiloArgs;
-
-void leerArchivo(DatosArchivo *datos) {
-    FILE *archivo;
-    archivo = fopen("dna.dat", "r");   //"r" si es secuancial  y "rb" si es binario
-    if (archivo == NULL) {
-        printf("Error al abrir el archivo.\n");
-        exit(EXIT_FAILURE);
-    }
-
-    // Calcular el tamaño del archivo  Es PARA ARCHIVOS BINARIOS
-    fseek(archivo, 0, SEEK_END); // Mover el puntero al final del archivo
-    datos->n = ftell(archivo); // Obtener la posición del puntero
-    fseek(archivo, 0, SEEK_SET); // Mover el puntero al inicio del archivo
-
-    /*
-    ------------------------------------------------------------------------------
-    // Contar Caracteres en un ARCHIVO SECUENCIAL de Texto
-
-    datos->n = 0;
-    int c;
-    while ((c = fgetc(archivo)) != EOF) {
-        datos->n++;
-    }
-    
-    fseek(archivo, 0, SEEK_SET); // Mover el puntero al inicio del archivo
-
-    -------------------------------------------------------------------------------------
+struct nodo {
+    int inicio;
+    int final;
+};
 
 
-    //Contar Líneas en un ARCHIVO SECUENCIAL de Texto
+void *recorrerHelice(void *arg) {
+    struct nodo* helice = (struct nodo*) arg;
 
-    datos->n = 0;
-    int c;
-    while ((c = fgetc(archivo)) != EOF) {
-        if (c == '\n') {
-            datos->n++;
-        }
-    }
-
-    // Incrementar si el archivo no termina con una nueva línea
-    fseek(archivo, -1, SEEK_END);
-    if (fgetc(archivo) != '\n') {
-        datos->n++;
-    }
-    ----------------------------------------------------------------------------------
-    */
-    
-
-
-    datos->secuencia = (char *)malloc((datos->n + 1) * sizeof(char));  // Reservar memoria para el arreglo de caracteres
-    if (datos->secuencia == NULL) {
-        printf("Error al reservar memoria.\n");
-        fclose(archivo);
-        exit(EXIT_FAILURE);
-    }
-
-    size_t n = fread(datos->secuencia, sizeof(char), datos->n, archivo);  // Leer el archivo
-    if (n != datos->n) {
-        printf("Error al leer el archivo.\n");
-        free(datos->secuencia);
-        fclose(archivo);
-        exit(EXIT_FAILURE);
-    }
-
-    datos->secuencia[datos->n] = '\0'; // Asegurarse de que la secuencia esté terminada en null
-    fclose(archivo);
-}
-
-void EstimarSecuencia(DatosArchivo *datos) {
-    for (size_t i = 0; i < datos->n; i++) {
-        switch (datos->secuencia[i]) {
+    for (int i = helice->inicio; i < helice->final; i++) {
+        switch (helicePrimaria[i]) {
             case 'a':
-                datos->secuencia[i] = 't';
+                heliceComplementaria[i] = 't';
                 break;
             case 'c':
-                datos->secuencia[i] = 'g';
+                heliceComplementaria[i] = 'g';
                 break;
             case 't':
-                datos->secuencia[i] = 'a';
+                heliceComplementaria[i] = 'a';
                 break;
             case 'g':
-                datos->secuencia[i] = 'c';
+                heliceComplementaria[i] = 'c';
                 break;
             default:
                 break;
         }
     }
-}
-
-void *manejador(void *arg) {
-    HiloArgs *args = (HiloArgs *)arg;
-    DatosArchivo *datos = args->datos;
-
-    leerArchivo(datos);
-    EstimarSecuencia(datos);
-
-    pthread_exit(NULL);
-}
-
-void CrearArchivo(DatosArchivo *datos, size_t n) {
-    FILE *archivo = fopen("SecuenciaEstimada.txt", "w");
-    if (archivo == NULL) {
-        printf("Error al crear el archivo\n");
-        exit(EXIT_FAILURE);
-    }
-
-    printf("Se ha creado el archivo SecuenciaEstimada.txt\n");
-    for (size_t i = 0; i < n; i++) {
-        fwrite(datos[i].secuencia, sizeof(char), datos[i].n, archivo);
-    }
-    fclose(archivo);
+    free(helice);
+    pthread_exit(0);
 }
 
 int main(int argc, char *argv[]) {
-    DatosArchivo datos[N];
-    HiloArgs args[N];
 
-    for (int i = 0; i < N; i++) {
-        datos[i].secuencia = NULL;
-        datos[i].n = 0;
-        args[i].datos = &datos[i];
-        args[i].id = i;
-
-        pthread_create(&hilos[i], NULL, manejador, (void *)&args[i]);
+    int nHilos = atoi(argv[2]);
+    if (nHilos <= 0) {
+        printf("debe ser mayo que 0.\n");
+        return 1;
     }
 
-    // Esperar a que todos los hilos terminen
-    for (int i = 0; i < N; i++) {
-        pthread_join(hilos[i], NULL);
+    pthread_t tids[nHilos];
+    int size;
+    int rangoXHilo;
+    
+    FILE *file = fopen(argv[1], "r");
+    if (file == NULL) {
+        perror("Error al abrir el archivo de entrada");
+        return 1;
     }
 
-    // El hilo principal combina los resultados y escribe el archivo
-    CrearArchivo(datos, N);
+    fscanf(file, "%d", &size);
 
-    // Liberar memoria asignada para el arreglo de caracteres
-    for (int i = 0; i < N; i++) {
-        if (datos[i].secuencia != NULL) {
-            free(datos[i].secuencia);
+    helicePrimaria = (char *) malloc((size + 1) * sizeof(char));
+    heliceComplementaria = (char *) malloc((size + 1) * sizeof(char));
+
+    for (int i = 0; i < size; i++) {
+        fscanf(file, " %c", &helicePrimaria[i]);
+    }
+
+    fclose(file);
+
+    rangoXHilo = size / nHilos;
+    struct nodo *dato;
+
+    for (int i = 0; i < nHilos; i++) {
+        dato = (struct nodo *) malloc(sizeof(struct nodo));
+        if (dato == NULL) {
+            perror("Error en malloc");
+            exit(EXIT_FAILURE);
+        }
+        dato->inicio = i * rangoXHilo;  
+        dato->final = (i == nHilos - 1) ? size : (i + 1) * rangoXHilo;
+
+        pthread_create(&tids[i], NULL, recorrerHelice, (void *)dato);
+        usleep (100);
+    }
+
+    printf("Hilo principal[%lu]\n", pthread_self());
+
+    for (int i = 0; i < nHilos; i++) {
+        pthread_join(tids[i], NULL);
+    }
+
+    FILE *output = fopen("SecuenciaEstimada.txt", "w");
+    if (!output) {
+        perror("Error al abrir el archivo de salida");
+        exit(EXIT_FAILURE);
+    }
+
+    fprintf(output, "%d\n", size);
+
+    for (int i = 0; i < size; i++) {
+        fprintf(output, "%c", helicePrimaria[i]);
+        if ((i + 1) % 60 == 0) {
+            fprintf(output, "\n");
         }
     }
 
-    return 0;
+    fprintf(output, "\n\n\n");
+
+    for (int i = 0; i < size; i++) {
+        fprintf(output, "%c", heliceComplementaria[i]);
+        if ((i + 1) % 60 == 0) {
+            fprintf(output, "\n");
+        }
+    }
+
+
+    printf("Se ha creado el archivo SecuenciaEstimada.txt\n");
+
+    fclose(output);
+    free(helicePrimaria);
+    free(heliceComplementaria);
+
+    return EXIT_SUCCESS;
 }
-
-
-
