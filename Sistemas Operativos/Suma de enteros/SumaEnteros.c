@@ -3,20 +3,20 @@
 #include <time.h>
 #include <math.h>
 
-// Definición de un Nodo para la tabla hash
+// Definiciï¿½n de un Nodo para la tabla hash
 struct Nodo {
     int llave;
     int freq;
     struct Nodo* sig;
 };
 
-// Definición de la tabla hash
+// Definiciï¿½n de la tabla hash
 struct HashTable {
 	int tamano;
     struct Nodo** tabla;
 };
 
-// Función para crear nueva tabla
+// Funciï¿½n para crear nueva tabla
 struct HashTable* crearHashTable(int tamano) {
     struct HashTable* tabla = (struct HashTable*)malloc(sizeof(struct HashTable));
     tabla->tamano = tamano;
@@ -28,7 +28,7 @@ struct HashTable* crearHashTable(int tamano) {
     return tabla;
 }
 
-// Función para liberar la memoria de la tabla hash
+// Funciï¿½n para liberar la memoria de la tabla hash
 void liberarHashTable(struct HashTable* tabla) {
 	int i;
     for ( i = 0; i < tabla->tamano; i++) {
@@ -43,12 +43,12 @@ void liberarHashTable(struct HashTable* tabla) {
     free(tabla);
 }
 
-// Función que obtiene el para obtener el índice  (RECUERDA!!!!)
+// Funciï¿½n que obtiene el para obtener el ï¿½ndice 
 int hashFunction(int llave, int tamano) {
     return llave % tamano;
 }
 
-// Función para insertar un elemento en la tabla
+// Funciï¿½n para insertar un elemento en la tabla
 void insert(struct HashTable* ht, int llave) {
     int index = hashFunction(llave, ht->tamano);
     struct Nodo* nuevoNodo = (struct Nodo*)malloc(sizeof(struct Nodo));
@@ -80,7 +80,7 @@ void insert(struct HashTable* ht, int llave) {
 int main(int argc, char *argv[]) {
     // Abre el archivo
     FILE *file;
-    file = fopen("test3.in", "rb");  
+    file = fopen(argv[1], "rb");  
     
     if (file == NULL) {
         printf("Error al abrir el archivo\n");
@@ -92,7 +92,7 @@ int main(int argc, char *argv[]) {
     // Medir el tiempo de lectura del archivo
     struct timespec start_read, end_read;
     double elapsed_read;
-    clock_gettime(CLOCK_MONOTONIC, &start_read);  //Busca por qué no se puede colocar CLOCK_MONOTONIC_RAW ¿es el contador más especifico?
+    clock_gettime(CLOCK_MONOTONIC, &start_read); 
 
     int size;
     fscanf(file, "%d", &size);
@@ -100,7 +100,7 @@ int main(int argc, char *argv[]) {
     // Crear la tabla hash
     struct HashTable* ht = crearHashTable(size);
 
-    // Crear un array dinámico para almacenar los números del archivo
+    // Crear un array dinï¿½mico para almacenar los nï¿½meros del archivo
     int *array = (int *)malloc(size * sizeof(int));
     if (array == NULL) {
         printf("Error al asignar memoria para el array\n");
@@ -111,7 +111,7 @@ int main(int argc, char *argv[]) {
 
     // Insertar los elementos del archivo en el array y en la tabla hash
     int numero, i;
-    double suma = 0;
+    long int suma = 0;
     for (i = 0; i < size; i++) {
         fscanf(file, "%d", &numero);
         array[i] = numero; 
@@ -119,13 +119,13 @@ int main(int argc, char *argv[]) {
         suma += numero; 
     }
 
-    fclose(file);  // OJO
+    fclose(file);  
 
     // Termina de medir el tiempo
     clock_gettime(CLOCK_MONOTONIC, &end_read);
     elapsed_read = (end_read.tv_sec - start_read.tv_sec) + ((end_read.tv_nsec - start_read.tv_nsec) / 1e9);
 
-    // Encontrar el número que más se repite y cuántas veces se repite
+    // Encontrar el nï¿½mero que mï¿½s se repite y cuï¿½ntas veces se repite
     int maxFreq = 0;
     int mostFrequent = -1;
     for (i = 0; i < ht->tamano; i++) {
@@ -154,7 +154,7 @@ int main(int argc, char *argv[]) {
         return (*(int *)a - *(int *)b);
     }
     
-    // Función de comparación para qsort
+    // Funciï¿½n de comparaciï¿½n para qsort
     qsort(array, size, sizeof(int), comparar);
     
     double mediana;
@@ -169,6 +169,7 @@ int main(int argc, char *argv[]) {
     free(array);
 
 	printf("------------------------------------------------\n");
+    printf("Total nÃºmeros: %d\n", size);
     printf("Tiempo de lectura del archivo: %.9f segundos\n", elapsed_read);
     printf("Suma de los enteros del archivo: %ld\n", suma);
     printf("El numero que mas se repite es: %d, y se repite %d veces\n", mostFrequent, maxFreq);
