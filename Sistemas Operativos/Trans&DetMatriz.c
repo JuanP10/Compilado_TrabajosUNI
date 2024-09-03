@@ -20,6 +20,40 @@ void MatrizTranspuesta(int **matriz, int m, int n, int **resultado){
     }
 }
 
+int Determinante(int **matriz, int n) {
+    if (n == 1) {
+        return matriz[0][0];
+    } else if (n == 2) {
+        return (matriz[0][0] * matriz[1][1]) - (matriz[0][1] * matriz[1][0]);
+    } else {
+        int det = 0;
+        for (int p = 0; p < n; p++) {
+            int **submatriz = (int **)malloc((n - 1) * sizeof(int *));
+            for (int i = 0; i < n - 1; i++) {
+                submatriz[i] = (int *)malloc((n - 1) * sizeof(int));
+            }
+            for (int i = 1; i < n; i++) {
+                int col = 0;
+                for (int j = 0; j < n; j++) {
+                    if (j != p) {
+                        submatriz[i - 1][col] = matriz[i][j];
+                        col++;
+                    }
+                }
+            }
+            det += matriz[0][p] * Determinante(submatriz, n - 1) * (p % 2 == 0 ? 1 : -1);
+            for (int i = 0; i < n - 1; i++) {
+                free(submatriz[i]);
+            }
+            free(submatriz);
+        }
+        return det;
+    }
+}
+
+
+
+
 int main(int argc, char *argv[]){    
 
     FILE *file = fopen(argv[1], "r");
@@ -82,7 +116,10 @@ int main(int argc, char *argv[]){
         }
     }
 
-    MatrizTranspuesta(matriz, m, n, resultado);
+    MatrizTranspuesta(matriz, m, n, resultado); 
+
+    printf("Determinante de la matriz: %d\n", Determinante(matriz, n));
+
 
     FILE *outfile = fopen(argv[2], "w");
     if (outfile == NULL) {
@@ -99,7 +136,7 @@ int main(int argc, char *argv[]){
     }
 
     fprintf(outfile, "%d %d\n", n, m);
-    
+
     // Escritura de los resultados
     for (int i = 0; i < n; i++) {
         for(int j = 0; j < m; j++){
