@@ -44,14 +44,18 @@ def devuelve_vecinos(pos):
     return true_vecinos
 
 def bfs_paths(pos_ini, goal):
+    count = -1
     queue = [(pos_ini, [pos_ini])]
     while queue:
         (vertex, path) = queue.pop(0)
+        count += 1
+        print("Paso: ", count)
         imprime_laberinto(laberinto, path)  # imprime todos los caminos
           
         l = list(set(devuelve_vecinos(vertex)) - set(path))
         for next in l:
             if next.x == goal.x and next.y == goal.y:
+                print("Camino encontrado: ")
                 imprime_laberinto(laberinto, path + [next])  # imprime el camino final
                 print(path + [next])
                 return 1

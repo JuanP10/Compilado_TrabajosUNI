@@ -109,6 +109,7 @@ class AStar(object):
             f, c, cell = heapq.heappop(self.opened)
             self.closed.add(cell)
             path_coords.append((cell.x, cell.y))
+            print ("Paso numero:"   + str(c))
             self.print_grid_with_path(path_coords)
 
             if cell is self.end:

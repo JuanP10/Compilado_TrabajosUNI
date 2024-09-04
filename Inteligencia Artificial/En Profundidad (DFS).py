@@ -45,14 +45,18 @@ def devuelve_vecinos(pos):
 
 def dfs_paths(pos_ini, goal):
     stack = [(pos_ini, [pos_ini])]
+    count = -1
     while stack:
         (vertex, path) = stack.pop()
+        count += 1
+        print("Paso: ", count)
         imprime_laberinto(laberinto, path)
         l = list(set(devuelve_vecinos(vertex)) - set(path))
         
         for next in l:
                  
             if next.x == goal.x and next.y == goal.y:
+                print("Camino encontrado: ")
                 imprime_laberinto(laberinto, path + [next]) 
                 print(path + [next])
                 return 1
