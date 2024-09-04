@@ -1,3 +1,6 @@
+
+#Busqueda con Información BFS en anchura
+
 from collections import namedtuple 
 
 Coord = namedtuple('Coord', ['x', 'y'])
@@ -44,12 +47,12 @@ def bfs_paths(pos_ini, goal):
     queue = [(pos_ini, [pos_ini])]
     while queue:
         (vertex, path) = queue.pop(0)
-        imprime_laberinto(laberinto, path)
+        imprime_laberinto(laberinto, path)  # imprime todos los caminos
           
         l = list(set(devuelve_vecinos(vertex)) - set(path))
         for next in l:
             if next.x == goal.x and next.y == goal.y:
-                imprime_laberinto(laberinto, path + [next])
+                imprime_laberinto(laberinto, path + [next])  # imprime el camino final
                 print(path + [next])
                 return 1
             else:

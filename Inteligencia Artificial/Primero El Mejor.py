@@ -1,3 +1,6 @@
+
+# Busqueda sin información: Primero el mejor
+
 import heapq
 
 class Cell:
@@ -13,6 +16,10 @@ class Cell:
 
     def __eq__(self, other):
         return self.x == other.x and self.y == other.y
+
+    def __hash__(self):
+        # Devuelve un hash único basado en las coordenadas x e y
+        return hash((self.x, self.y))
 
 class BestFirstSearch:
     def __init__(self):
@@ -52,7 +59,7 @@ class BestFirstSearch:
             cells.append(self.get_cell(cell.x, cell.y + 1))
         return cells
 
-    def print_grid_with_path(self, path):
+    def print_grid_with_path(self, path, current=None):
         # Imprimir el laberinto con el camino marcado
         grid = [['0'] * self.grid_height for _ in range(self.grid_width)]
         for x in range(self.grid_width):
@@ -86,7 +93,11 @@ class BestFirstSearch:
         # Añadimos la celda inicial a la lista de abiertas
         heapq.heappush(self.opened, (self.get_heuristic(self.start), self.start))
         
+        step = 0
         while self.opened:
+            print(f"Paso {step}:")
+            step += 1
+
             # Tomamos la celda con la menor heurística (más prometedora)
             _, cell = heapq.heappop(self.opened)
             
@@ -99,6 +110,9 @@ class BestFirstSearch:
             self.closed.add(cell)
             
             # Expandimos las celdas adyacentes
+            path = {(c.x, c.y) for c in self.closed}
+            self.print_grid_with_path(path, current=cell)
+
             for adj_cell in self.get_adjacent_cells(cell):
                 if adj_cell.reachable and adj_cell not in self.closed:
                     adj_cell.parent = cell
@@ -111,4 +125,3 @@ class BestFirstSearch:
 bfs = BestFirstSearch()
 bfs.init_grid()
 bfs.search()
-
