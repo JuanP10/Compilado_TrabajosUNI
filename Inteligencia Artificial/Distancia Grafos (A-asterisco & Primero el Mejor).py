@@ -1,98 +1,133 @@
 import heapq
+import time
 
-# Definición del grafo con distancias entre nodos
-graph = {
-    'Monteria': {'Sincelejo': 70},
-    'Sincelejo': {'Monteria': 70, 'Plato': 25},
-    'Plato': {'Sincelejo': 25, 'Barranquilla': 80},
-    'Barranquilla': {'Plato': 80, 'Santa Marta': 80, 'Cartagena': 90},
-    'Santa Marta': {'Barranquilla': 80, 'Riohacha': 70},
-    'Riohacha': {'Santa Marta': 70, 'Uribia': 50, 'San Juan del Cesar': 30},
-    'San Juan del Cesar': {'Riohacha': 30, 'Aguachica': 75},
+# Definición del grafo con las distancias correctas
+grafo = {
+    'Monteria': {'Sincelejo': 70, 'Cartagena': 90},
+    'Sincelejo': {'El Banco': 75, 'Monteria': 70, 'Cartagena': 80},
+    'Cartagena': {'Sincelejo': 80, 'Monteria': 90, 'Barranquilla': 90},
+    'El Banco': {'Aguachica': 25, 'Plato': 25, 'Sincelejo': 75, 'Santa Marta': 70},
     'Aguachica': {'San Juan del Cesar': 75, 'El Banco': 25},
-    'El Banco': {'Aguachica': 25, 'Plato': 60},
+    'Plato': {'Santa Marta': 60, 'Barranquilla': 70, 'El Banco': 25},
+    'Barranquilla': {'Cartagena': 90, 'Plato': 70, 'Santa Marta': 80},
+    'Santa Marta': {'Riohacha': 70, 'Plato': 60, 'Barranquilla': 80, 'El Banco': 70},
+    'Riohacha': {'Uribia': 50, 'Santa Marta': 70, 'San Juan del Cesar': 30},
+    'San Juan del Cesar': {'Riohacha': 30, 'Aguachica': 75, 'Uribia': 35},
     'Uribia': {}
 }
 
-# Heurísticas (h(n))
-heuristics = {
-    'Uribia': 0,
-    'Riohacha': 10,
-    'San Juan del Cesar': 18,
-    'Santa Marta': 50,
-    'El Banco': 120,
-    'Barranquilla': 100,
-    'Aguachica': 210,
-    'Plato': 280,
+# Heurísticas (h(n)) para A*
+heuristicas = {
+    'Monteria': 450,
     'Sincelejo': 350,
     'Cartagena': 355,
-    'Monteria': 450
+    'El Banco': 120,
+    'Aguachica': 210,
+    'Plato': 280,
+    'Barranquilla': 100,
+    'Santa Marta': 50,
+    'Riohacha': 10,
+    'San Juan del Cesar': 18,
+    'Uribia': 0
 }
 
-# Algoritmo A*
-def astar_search(start, goal):
-    open_list = []
-    heapq.heappush(open_list, (heuristics[start], 0, start, []))  # (f(n), g(n), node, path)
-    closed_list = set()
+# Algoritmo A* (A-asterisco)
+def busqueda_a_estrella(inicio, objetivo):
+    lista_abierta = []
+    heapq.heappush(lista_abierta, (heuristicas[inicio], 0, inicio, []))  # (f(n), g(n), nodo, camino)
+    lista_cerrada = set()
+    nodos_visitados = 0  # Para contar los nodos que se visitan
 
-    while open_list:
-        _, g, current_node, path = heapq.heappop(open_list)
+    while lista_abierta:
+        _, costo_acumulado, nodo_actual, camino = heapq.heappop(lista_abierta)
+        nodos_visitados += 1
         
-        if current_node in closed_list:
+        if nodo_actual in lista_cerrada:
             continue
         
-        path = path + [current_node]
+        camino = camino + [nodo_actual]
 
         # Si encontramos el nodo objetivo
-        if current_node == goal:
-            return path, g
+        if nodo_actual == objetivo:
+            return camino, costo_acumulado, nodos_visitados
 
-        closed_list.add(current_node)
+        lista_cerrada.add(nodo_actual)
 
-        for neighbor, cost in graph[current_node].items():
-            if neighbor not in closed_list:
-                new_g = g + cost
-                f = new_g + heuristics[neighbor]
-                heapq.heappush(open_list, (f, new_g, neighbor, path))
+        for vecino, costo in grafo[nodo_actual].items():
+            if vecino not in lista_cerrada:
+                nuevo_costo_acumulado = costo_acumulado + costo
+                costo_total = nuevo_costo_acumulado + heuristicas[vecino]
+                heapq.heappush(lista_abierta, (costo_total, nuevo_costo_acumulado, vecino, camino))
     
-    return None, float('inf')
+    return None, float('inf'), nodos_visitados
 
 # Algoritmo Primero el Mejor
-def best_first_search(start, goal):
-    open_list = []
-    heapq.heappush(open_list, (heuristics[start], start, []))  # (h(n), node, path)
-    closed_list = set()
+def busqueda_primero_mejor(inicio, objetivo):
+    lista_abierta = []
+    heapq.heappush(lista_abierta, (heuristicas[inicio], inicio, 0, []))  # (h(n), nodo, costo_acumulado, camino)
+    lista_cerrada = set()
+    nodos_visitados = 0  # Para contar los nodos que se visitan
 
-    while open_list:
-        _, current_node, path = heapq.heappop(open_list)
+    while lista_abierta:
+        _, nodo_actual, costo_acumulado, camino = heapq.heappop(lista_abierta)
+        nodos_visitados += 1
 
-        if current_node in closed_list:
+        if nodo_actual in lista_cerrada:
             continue
 
-        path = path + [current_node]
+        camino = camino + [nodo_actual]
 
         # Si encontramos el nodo objetivo
-        if current_node == goal:
-            return path
+        if nodo_actual == objetivo:
+            return camino, costo_acumulado, nodos_visitados
 
-        closed_list.add(current_node)
+        lista_cerrada.add(nodo_actual)
 
-        for neighbor in graph[current_node]:
-            if neighbor not in closed_list:
-                heapq.heappush(open_list, (heuristics[neighbor], neighbor, path))
+        for vecino, costo in grafo[nodo_actual].items():
+            if vecino not in lista_cerrada:
+                nuevo_costo_acumulado = costo_acumulado + costo
+                heapq.heappush(lista_abierta, (heuristicas[vecino], vecino, nuevo_costo_acumulado, camino))
     
-    return None
+    return None, float('inf'), nodos_visitados
 
 # Ejecutar A* y Primero el Mejor
-start_city = 'Monteria'
-goal_city = 'Uribia'
+ciudad_inicio = 'Monteria'
+ciudad_objetivo = 'Uribia'
 
-# Algoritmo A*
-astar_path, astar_cost = astar_search(start_city, goal_city)
-print("Ruta A*: ", astar_path)
-print("Costo A*: ", astar_cost)
+# Ejecutar A*
+start_time_a_star = time.time()
+camino_a_estrella, costo_a_estrella, nodos_a_estrella = busqueda_a_estrella(ciudad_inicio, ciudad_objetivo)
+time_a_star = time.time() - start_time_a_star
 
-# Algoritmo Primero el Mejor
-best_first_path = best_first_search(start_city, goal_city)
-print("Ruta Primero el Mejor: ", best_first_path)
-print("Costo Primero el Mejor: ", )
+# Ejecutar Primero el Mejor
+start_time_pm = time.time()
+camino_primero_mejor, costo_primero_mejor, nodos_primero_mejor = busqueda_primero_mejor(ciudad_inicio, ciudad_objetivo)
+time_pm = time.time() - start_time_pm
+
+# Imprimir los resultados
+print("=== Resultados A* ===")
+print("Ruta: ", camino_a_estrella)
+print("Costo (distancia acumulada): ", costo_a_estrella)
+print("Nodos visitados: ", nodos_a_estrella)
+print("Tiempo de ejecución: {:.6f} segundos".format(time_a_star))
+
+print("\n=== Resultados Primero el Mejor ===")
+print("Ruta: ", camino_primero_mejor)
+print("Costo (distancia acumulada): ", costo_primero_mejor)
+print("Nodos visitados: ", nodos_primero_mejor)
+print("Tiempo de ejecución: {:.6f} segundos".format(time_pm))
+
+# Comparación
+if costo_a_estrella < costo_primero_mejor:
+    print("\nA* encontró una ruta más corta.")
+elif costo_a_estrella > costo_primero_mejor:
+    print("\nPrimero el Mejor encontró una ruta más corta.")
+else:
+    print("\nAmbos algoritmos encontraron rutas con el mismo costo.")
+
+if nodos_a_estrella < nodos_primero_mejor:
+    print("A* fue más eficiente (menos nodos visitados).")
+elif nodos_a_estrella > nodos_primero_mejor:
+    print("Primero el Mejor fue más eficiente (menos nodos visitados).")
+else:
+    print("Ambos algoritmos visitaron el mismo número de nodos.")
