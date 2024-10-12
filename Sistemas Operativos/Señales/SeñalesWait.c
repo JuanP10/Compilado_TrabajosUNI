@@ -95,6 +95,9 @@ int main(int argc, char **argv){
 
   if(root == getpid()){ //Proceso padre
     showtree();
+    for (idx = 0; idx < NUM_CHILDREN; idx++) {
+      wait(NULL);
+    }
   }else{
     sleep(1);
   }
