@@ -8,7 +8,7 @@
 int MirarVecinos(int **matrix, int rows, int cols, int i, int j) {
     for (int x = i - 1; x <= i + 1; x++) {
         for (int y = j - 1; y <= j + 1; y++) {
-            if (x >= 0 && x < rows && y >= 0 && y < cols) {  //Si no está en la frontera
+            if (x >= 0 && x < rows && y >= 0 && y < cols) {  
                 if (matrix[x][y] == 2) {
                     return 1; 
                 }
@@ -20,21 +20,21 @@ int MirarVecinos(int **matrix, int rows, int cols, int i, int j) {
 
 void subMatriz(int inicio, int final, int pipe_fd[2], int **matrix, int filas, int cols, int idHijo ) {
 
-    close(pipe_fd[0]); // Cerrar lectura
+    close(pipe_fd[0]); 
 
     for (int i = inicio; i < final; i++) {
         for (int j = 0; j < cols; j++) {
             if (matrix[i][j] == 1) {
                 if (MirarVecinos(matrix, filas, cols, i, j)) {
                     char msg[100];
-                    sprintf(msg, "Hijo %d: Mina en [%d, %d]\n", idHijo, i, j);
-                    printf("Hijo %d: Mina en [%d, %d]\n", idHijo, i, j);
+                    sprintf(msg, "Padre dice que: Hijo %d: Mina en [%d, %d]\n", idHijo, i, j);
+                    //printf("Hijo %d dice: Mina en [%d, %d]\n", idHijo, i, j);
                     write(pipe_fd[1], msg, sizeof(msg));
                 }
             }
         }
     }
-    close(pipe_fd[1]); // Cerrar escritura 
+    close(pipe_fd[1]); 
 }
 
 int **LeerMatriz(const char *filename, int *rows, int *cols) {
@@ -110,11 +110,11 @@ int main(int argc, char const *argv) {
     // Código del padre
     for (int i = 0; i < N; i++) {
         close(pipes[i][1]); // Cerrar escritura
-        char buffer[1000];
+        char buffer[100];
 
-        read(pipes[i][0], buffer, sizeof(buffer));
-
-        printf("%s", buffer);
+        while(read(pipes[i][0], buffer, sizeof(buffer))>0){
+            printf("%s", buffer);
+        }
         
         close(pipes[i][0]); // Cerrar lectura 
         
